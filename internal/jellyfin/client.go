@@ -26,7 +26,9 @@ func (c *JellyfinClient) BaseURL() string { return c.baseURL }
 func (c *JellyfinClient) APIKey() string  { return c.apiKey }
 
 // NewJellyfinClient creates a client from environment variables.
-// Exits if JELLYFIN_API_KEY is not set.
+// Exits if JELLYFIN_API_KEY is not set. The key is sent using Jellyfin's
+// current MediaBrowser Authorization schema, rather than a legacy token
+// header.
 func NewJellyfinClient() *JellyfinClient {
 	baseURL := os.Getenv("JELLYFIN_URL")
 	if baseURL == "" {
@@ -67,7 +69,7 @@ func (c *JellyfinClient) DoRequest(ctx context.Context, method, endpoint string,
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
-	req.Header.Set("X-MediaBrowser-Token", c.apiKey)
+	setAuthorizationHeader(req, c.apiKey)
 	req.Header.Set("Accept", "application/json")
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
@@ -141,7 +143,7 @@ func (c *JellyfinClient) PostRaw(ctx context.Context, endpoint string, params ur
 	if err != nil {
 		return fmt.Errorf("creating request: %w", err)
 	}
-	req.Header.Set("X-MediaBrowser-Token", c.apiKey)
+	setAuthorizationHeader(req, c.apiKey)
 	req.Header.Set("Content-Type", contentType)
 
 	resp, err := c.httpClient.Do(req)
@@ -158,6 +160,13 @@ func (c *JellyfinClient) PostRaw(ctx context.Context, endpoint string, params ur
 	// Drain body so the connection can be reused (HTTP keep-alive)
 	_, _ = io.Copy(io.Discard, resp.Body)
 	return nil
+}
+
+// setAuthorizationHeader uses Jellyfin's non-deprecated authorization
+// mechanism. API keys are tokens too, so they are carried in the Token field
+// of the MediaBrowser authorization scheme.
+func setAuthorizationHeader(req *http.Request, token string) {
+	req.Header.Set("Authorization", fmt.Sprintf("MediaBrowser Token=\"%s\"", token))
 }
 
 func (c *JellyfinClient) Del(ctx context.Context, endpoint string, params url.Values) error {

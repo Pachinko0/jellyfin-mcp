@@ -46,7 +46,7 @@ func usageTemplate() string {
 
 Environment variables:
   JELLYFIN_URL        Server URL (default: https://jellyfin_host:8920)
-  JELLYFIN_API_KEY    API key (required)
+  JELLYFIN_API_KEY    API key (required; sent with the current MediaBrowser Authorization schema)
   JELLYFIN_USER_ID    User ID (optional, auto-detected if not set)
 
 Flags:
