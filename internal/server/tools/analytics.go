@@ -208,16 +208,16 @@ func RegisterAnalyticsTools(server *mcp.Server, client jf.Client, enabled func(s
 					days = 30
 				}
 				maxItems := jf.ClampInt(args.Limit, 500, jf.MaxLimitCap)
-				minDate := time.Now().AddDate(0, 0, -days).Format(jf.DateOnlyFormat)
 				params := url.Values{
-					"MinDateCreated": {minDate},
-					"Recursive":      {"true"},
-					"SortBy":         {"DateCreated"},
-					"SortOrder":      {"Descending"},
-					"Fields":         {"Overview,ProductionYear,CommunityRating,DateCreated"},
+					"Recursive": {"true"},
+					"SortBy":    {"DateCreated"},
+					"SortOrder": {"Descending"},
+					"Fields":    {"Overview,ProductionYear,CommunityRating,DateCreated"},
 				}
 				if args.Type != "" {
 					params.Set("IncludeItemTypes", args.Type)
+				} else {
+					params.Set("IncludeItemTypes", "Movie,Series")
 				}
 				if args.ParentID != "" {
 					params.Set("ParentId", args.ParentID)
@@ -227,17 +227,11 @@ func RegisterAnalyticsTools(server *mcp.Server, client jf.Client, enabled func(s
 				if err != nil {
 					return jf.ErrResult("Jellyfin API error: %v", err), nil, nil
 				}
-				items := make([]map[string]any, 0, len(rawItems))
-				for _, raw := range rawItems {
-					m := jf.ToMap(raw)
-					item := jf.ExtractMediaItem(m)
-					if dc := jf.GetString(m, "DateCreated"); dc != "" {
-						item["date_added"] = jf.Truncate(dc, jf.DateOnlyLen)
-					}
-					items = append(items, item)
-				}
+				cutoff := time.Now().Add(-time.Duration(days) * 24 * time.Hour)
+				items := filterRecentlyAdded(rawItems, cutoff)
+				total = len(items)
 				msg := fmt.Sprintf("Recently added in last %d days (%d total, showing %d):\n\n%s", days, total, len(items), jf.FormatJSON(items))
-				if len(items) < total {
+				if len(items) >= maxItems {
 					msg += fmt.Sprintf("\n\nMore results available. Increase limit (currently %d) to see more.", maxItems)
 				}
 				return jf.TextResult(msg), &jf.AnalyticsOutput{Items: jf.ToMediaItems(items), TotalCount: total}, nil
@@ -665,4 +659,26 @@ func RegisterAnalyticsTools(server *mcp.Server, client jf.Client, enabled func(s
 			}
 		})
 	}
+}
+
+// filterRecentlyAdded uses DateCreated, not PremiereDate, because this report
+// is about when Jellyfin added an item to the library. Items with missing or
+// invalid DateCreated values are excluded rather than being treated as recent.
+func filterRecentlyAdded(rawItems []any, cutoff time.Time) []map[string]any {
+	items := make([]map[string]any, 0, len(rawItems))
+	for _, raw := range rawItems {
+		m := jf.ToMap(raw)
+		created := jf.GetString(m, "DateCreated")
+		if created == "" {
+			continue
+		}
+		createdAt, err := time.Parse(time.RFC3339Nano, created)
+		if err != nil || createdAt.Before(cutoff) {
+			continue
+		}
+		item := jf.ExtractMediaItem(m)
+		item["date_added"] = createdAt.UTC().Format(jf.DateOnlyFormat)
+		items = append(items, item)
+	}
+	return items
 }

@@ -164,3 +164,21 @@ func TestGetItem_NotFound(t *testing.T) {
 		t.Error("expected IsError to be true")
 	}
 }
+
+func TestMediaActions_DownloadURLUsesCurrentAPIKeyQueryName(t *testing.T) {
+	result := callTool(t, &mockClient{
+		baseURLVal: "http://jellyfin.test",
+		apiKeyVal:  "secret",
+	}, "discovery", "jellyfin_item_extras", map[string]any{
+		"action":  "download_url",
+		"item_id": "item-1",
+	})
+
+	text := resultText(t, result)
+	if !strings.Contains(text, "/Items/item-1/Download?ApiKey=secret") {
+		t.Fatalf("expected current ApiKey query parameter, got: %s", text)
+	}
+	if strings.Contains(text, "api_key=") {
+		t.Fatalf("deprecated api_key query parameter is still present: %s", text)
+	}
+}
