@@ -19,6 +19,7 @@ var ToolsetMap = map[string][]string{
 		"jellyfin_get_item",
 		"jellyfin_recommendations",
 		"jellyfin_item_extras",
+		"jellyfin_watchlist",
 	},
 	"media": {
 		"jellyfin_tv_shows",
@@ -123,6 +124,7 @@ func BuildToolFilter(toolsets string, readOnly, disableDestructive bool) func(st
 
 func RegisterTools(server *mcp.Server, client jf.Client, enabled func(string, *mcp.ToolAnnotations) bool) {
 	RegisterDiscoveryTools(server, client, enabled)
+	RegisterWatchlistTools(server, client, enabled)
 	RegisterMediaTools(server, client, enabled)
 	RegisterUserTools(server, client, enabled)
 	RegisterPlaybackTools(server, client, enabled)

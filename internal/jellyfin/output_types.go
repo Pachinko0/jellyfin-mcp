@@ -25,6 +25,13 @@ type ItemListOutput struct {
 	Items      []MediaItem `json:"items"`
 }
 
+type WatchlistOutput struct {
+	TotalCount int              `json:"total_count"`
+	Page       int              `json:"page"`
+	TotalPages int              `json:"total_pages"`
+	Items      []map[string]any `json:"items"`
+}
+
 // --- Libraries ---
 
 type LibraryInfo struct {

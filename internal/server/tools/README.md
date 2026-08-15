@@ -1,6 +1,6 @@
 # Tools
 
-31 tools organized into 8 toolsets. Enable specific toolsets with `--toolsets discovery,media,...` or restrict access with `--read-only` and `--disable-destructive`.
+32 tools organized into 8 toolsets. Enable specific toolsets with `--toolsets discovery,media,...` or restrict access with `--read-only` and `--disable-destructive`.
 
 ## discovery
 
@@ -12,6 +12,7 @@
 | `jellyfin_get_item` | Full metadata for a specific item (genres, cast, codecs, ratings, provider IDs) |
 | `jellyfin_recommendations` | Explainable local recommendations, suggestions, next up, latest additions, and similar items |
 | `jellyfin_item_extras` | Special features, trailers, theme songs, intro/outro markers, download URLs |
+| `jellyfin_watchlist` | Read the active Jellyfin user’s direct Jellyseerr watchlist |
 
 ## media
 

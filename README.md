@@ -5,7 +5,7 @@
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8.svg)](https://go.dev)
 [![npm](https://img.shields.io/npm/v/@jaredtrent/jellyfin-mcp)](https://www.npmjs.com/package/@jaredtrent/jellyfin-mcp)
 
-MCP server that connects AI assistants to your [Jellyfin](https://jellyfin.org) media server — 31 tools, 13 live resources, and 18 guided workflows. Search your library, control playback, manage metadata, find subtitles, troubleshoot your server, and more.
+MCP server that connects AI assistants to your [Jellyfin](https://jellyfin.org) media server — 32 tools, 13 live resources, and 18 guided workflows. Search your library, control playback, manage metadata, find subtitles, troubleshoot your server, and more.
 
 This project is not associated with the official Jellyfish project or team. It's a fan project.
 
@@ -292,14 +292,16 @@ Image tags: `latest` (latest build from `main`), the full version from release t
 | `JELLYFIN_API_KEY` | Yes | API key from your Jellyfin dashboard |
 | `JELLYFIN_URL` | No | Server URL — e.g. `http://YOUR_SERVER:8096`, or `https://YOUR_SERVER:8920` if HTTPS is enabled. Defaults to a placeholder, so set this. |
 | `JELLYFIN_USER_ID` | No | User ID — auto-detected from the API key if not set |
+| `JELLYSEERR_URL` | No | Jellyseerr server URL; required only for `jellyfin_watchlist` |
+| `JELLYSEERR_API_KEY` | No | Jellyseerr API key; required only for `jellyfin_watchlist` |
 
 ### Toolsets
 
-31 tools organized into 8 groups. Enable specific groups with `--toolsets discovery,media,...` to reduce context size and keep the AI focused. By default, all toolsets are enabled.
+32 tools organized into 8 groups. Enable specific groups with `--toolsets discovery,media,...` to reduce context size and keep the AI focused. By default, all toolsets are enabled.
 
 | Toolset | Tools | Covers |
 |---------|-------|--------|
-| `discovery` | 6 | Search, browse, explainable recommendations, item details |
+| `discovery` | 7 | Search, browse, recommendations, item details, Jellyseerr watchlist |
 | `media` | 3 | TV shows, music, people |
 | `user` | 3 | Favorites, generated playlists, playlists, collections |
 | `playback` | 4 | Sessions, playback control, SyncPlay |
