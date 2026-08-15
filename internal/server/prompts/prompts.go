@@ -127,7 +127,7 @@ func RegisterPrompts(server *mcp.Server, _ jf.Client) {
 				"sort_by=\"CommunityRating\", sort_order=\"Descending\", limit=10\n"
 		}
 
-		instruction += "2. Use jellyfin_recommendations type=\"movie_recs\" for personalized picks\n" +
+		instruction += "2. Use jellyfin_recommendations type=\"personalized\" with query=" + fmt.Sprintf("\"%s\"", mood) + " for explainable library-local picks\n" +
 			"3. Present the top 5 suggestions with ratings, year, runtime, and a brief overview"
 
 		if mood != "" {
@@ -143,6 +143,38 @@ func RegisterPrompts(server *mcp.Server, _ jf.Client) {
 				Role:    "user",
 				Content: &mcp.TextContent{Text: instruction},
 			}},
+		}, nil
+	})
+
+	// --- playlist-builder ---
+	server.AddPrompt(&mcp.Prompt{
+		Name:        "playlist-builder",
+		Description: "Generate a playlist from a natural-language mood, activity, or time budget",
+		Arguments: []*mcp.PromptArgument{
+			{Name: "name", Description: "Playlist name", Required: true},
+			{Name: "request", Description: "Mood or activity, such as relaxed Sunday, workout, or family movie night", Required: true},
+			{Name: "duration_minutes", Description: "Target duration in minutes"},
+			{Name: "media_type", Description: "Audio or Video (default: Video)"},
+		},
+	}, func(_ context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+		name := req.Params.Arguments["name"]
+		request := req.Params.Arguments["request"]
+		duration := req.Params.Arguments["duration_minutes"]
+		mediaType := req.Params.Arguments["media_type"]
+		if duration == "" {
+			duration = "90"
+		}
+		if mediaType == "" {
+			mediaType = "Video"
+		}
+		instruction := fmt.Sprintf("Build a Jellyfin playlist named %q for: %s. Follow these steps:\n", name, request) +
+			fmt.Sprintf("1. Use jellyfin_playlists action=\"generate\" with name=%q, query=%q, media_type=%q, duration_minutes=%s\n", name, request, mediaType, duration) +
+			"2. Show me the generated preview and explain the strongest matches and exclusions\n" +
+			"3. Do not create the playlist until I explicitly confirm the preview\n" +
+			"4. If I confirm, call jellyfin_playlists action=\"generate\" again with confirm=true"
+		return &mcp.GetPromptResult{
+			Description: "Generate a smart playlist",
+			Messages:    []*mcp.PromptMessage{{Role: "user", Content: &mcp.TextContent{Text: instruction}}},
 		}, nil
 	})
 

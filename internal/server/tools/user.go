@@ -141,9 +141,9 @@ func RegisterUserTools(server *mcp.Server, client jf.Client, enabled func(string
 			Name:  "jellyfin_playlists",
 			Title: "Playlists",
 			InputSchema: jf.WithEnums[jf.PlaylistsInput](map[string][]any{
-				"action": {"list", "create", "get", "add_items", "remove_items", "move_item", "deduplicate"},
+				"action": {"list", "create", "generate", "get", "add_items", "remove_items", "move_item", "deduplicate"},
 			}),
-			Description: "Create and manage playlists. Use 'list' to see all playlists, 'create' to make a new one, 'get' to view playlist items, " +
+			Description: "Create and manage playlists. Use 'list' to see all playlists, 'create' to make a new one, or 'generate' to rank library items into a previewed playlist from a natural-language request. Use 'get' to view playlist items, " +
 				"'add_items' or 'remove_items' to modify contents, and 'move_item' to reorder. " +
 				"Use 'deduplicate' to find and remove duplicate entries (dry_run=true by default for preview, set dry_run=false and confirm=true to remove). " +
 				"When creating, provide a name and optional media_type (Audio or Video). For add_items and remove_items, provide the playlist_id and item_ids array. " +
@@ -156,6 +156,43 @@ func RegisterUserTools(server *mcp.Server, client jf.Client, enabled func(string
 			}
 
 			switch args.Action {
+			case "generate":
+				if args.Name == "" {
+					return jf.ErrResult("name is required for a generated playlist."), nil, nil
+				}
+				mediaTypes := "Movie,Series"
+				if args.MediaType == "Audio" {
+					mediaTypes = "Audio,MusicAlbum"
+				}
+				candidates, err := fetchLocalCandidates(ctx, client, userID, mediaTypes, args.MaxRuntimeMinutes)
+				if err != nil {
+					return jf.ErrResult("Jellyfin API error: %v", err), nil, nil
+				}
+				profile := jf.BuildPreferenceProfile(candidates)
+				ranked := jf.RankRecommendations(candidates, profile, args.Query, args.MaxRuntimeMinutes, false, jf.ClampInt(args.Limit, 50, jf.MaxLimitCap))
+				selected := jf.SelectPlaylistItems(ranked, args.DurationMinutes, args.Limit)
+				if len(selected) == 0 {
+					return jf.ErrResult("No suitable unwatched items matched the playlist request."), nil, nil
+				}
+				previewItems := rankedResultItems(selected)
+				preview := fmt.Sprintf("Generated playlist preview for %q (%d items):\n\n%s", args.Name, len(previewItems), jf.FormatJSON(previewItems))
+				if args.Confirm == nil || !*args.Confirm {
+					return jf.TextResult(preview + "\n\nCall again with confirm=true to create it."), nil, nil
+				}
+				itemIDs := make([]string, 0, len(selected))
+				for _, item := range selected {
+					itemIDs = append(itemIDs, item.Candidate.ID)
+				}
+				body := map[string]any{"Name": args.Name, "UserId": userID, "Ids": itemIDs}
+				if args.MediaType != "" {
+					body["MediaType"] = args.MediaType
+				}
+				var result map[string]any
+				if err := client.Post(ctx, "/Playlists", nil, body, &result); err != nil {
+					return jf.ErrResult("Failed to create generated playlist: %v", err), nil, nil
+				}
+				return jf.TextResult(preview + fmt.Sprintf("\n\nPlaylist created (ID: %s).", jf.GetString(result, "Id"))), nil, nil
+
 			case "list":
 				params := url.Values{
 					"IncludeItemTypes": {"Playlist"},
@@ -319,7 +356,7 @@ func RegisterUserTools(server *mcp.Server, client jf.Client, enabled func(string
 				return jf.TextResult(fmt.Sprintf("Removed %d duplicate entries from playlist:\n\n%s", len(duplicateEntryIDs), jf.FormatJSON(dupReport))), nil, nil
 
 			default:
-				return jf.ErrResult("Invalid action '%s'. Valid actions: list, create, get, add_items, remove_items, move_item, deduplicate", args.Action), nil, nil
+				return jf.ErrResult("Invalid action '%s'. Valid actions: list, create, generate, get, add_items, remove_items, move_item, deduplicate", args.Action), nil, nil
 			}
 		})
 	}

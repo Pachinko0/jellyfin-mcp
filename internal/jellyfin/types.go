@@ -38,10 +38,13 @@ type GetItemInput struct {
 }
 
 type RecommendationsInput struct {
-	Type     string `json:"type" jsonschema:"Recommendation type: next_up (next episodes in progress series), suggestions (personalized picks), latest (recently added to library), similar (items like a given item - requires item_id), movie_recs (movie recommendations), upcoming (upcoming TV episodes), recently_played (recently watched items)"`
-	ItemID   string `json:"item_id,omitempty" jsonschema:"Item ID required for 'similar' type. Get from search or browse results"`
-	ParentID string `json:"parent_id,omitempty" jsonschema:"Library ID to scope 'latest' results. Get from jellyfin_libraries"`
-	Limit    int    `json:"limit,omitempty" jsonschema:"Maximum results (default 25)"`
+	Type          string `json:"type" jsonschema:"Recommendation type: personalized (local explainable ranking), next_up (next episodes in progress series), suggestions (Jellyfin suggestions), latest (recently added to library), similar (items like a given item - requires item_id), movie_recs (movie recommendations), upcoming (upcoming TV episodes), recently_played (recently watched items)"`
+	ItemID        string `json:"item_id,omitempty" jsonschema:"Item ID required for 'similar' type. Get from search or browse results"`
+	ParentID      string `json:"parent_id,omitempty" jsonschema:"Library ID to scope 'latest' results. Get from jellyfin_libraries"`
+	Limit         int    `json:"limit,omitempty" jsonschema:"Maximum results (default 25)"`
+	Query         string `json:"query,omitempty" jsonschema:"Optional words or mood to match against titles"`
+	MaxRuntime    int    `json:"max_runtime_minutes,omitempty" jsonschema:"Optional maximum runtime in minutes"`
+	IncludePlayed *bool  `json:"include_played,omitempty" jsonschema:"Include already played items (default false)"`
 }
 
 // --- Media Navigation ---
@@ -79,15 +82,19 @@ type UserDataInput struct {
 }
 
 type PlaylistsInput struct {
-	Action     string   `json:"action" jsonschema:"Action: list (all playlists), create (new playlist), get (playlist items), add_items (add to playlist), remove_items (remove from playlist), move_item (reorder), deduplicate (find/remove duplicate entries)"`
-	PlaylistID string   `json:"playlist_id,omitempty" jsonschema:"Playlist ID (required for get, add_items, remove_items, move_item, deduplicate)"`
-	Name       string   `json:"name,omitempty" jsonschema:"Playlist name (required for create)"`
-	ItemIDs    []string `json:"item_ids,omitempty" jsonschema:"Item IDs to add or remove"`
-	ItemID     string   `json:"item_id,omitempty" jsonschema:"Single item ID for move_item"`
-	NewIndex   *int     `json:"new_index,omitempty" jsonschema:"New position index for move_item (0-based)"`
-	MediaType  string   `json:"media_type,omitempty" jsonschema:"Media type for create: Audio or Video"`
-	DryRun     *bool    `json:"dry_run,omitempty" jsonschema:"For deduplicate: report-only mode (default true)"`
-	Confirm    *bool    `json:"confirm,omitempty" jsonschema:"Set to true to confirm destructive operations (required for remove_items, deduplicate with dry_run=false)"`
+	Action            string   `json:"action" jsonschema:"Action: list (all playlists), create (new playlist), generate (rank candidates and preview/create a playlist), get (playlist items), add_items (add to playlist), remove_items (remove from playlist), move_item (reorder), deduplicate (find/remove duplicate entries)"`
+	PlaylistID        string   `json:"playlist_id,omitempty" jsonschema:"Playlist ID (required for get, add_items, remove_items, move_item, deduplicate)"`
+	Name              string   `json:"name,omitempty" jsonschema:"Playlist name (required for create)"`
+	ItemIDs           []string `json:"item_ids,omitempty" jsonschema:"Item IDs to add or remove"`
+	ItemID            string   `json:"item_id,omitempty" jsonschema:"Single item ID for move_item"`
+	NewIndex          *int     `json:"new_index,omitempty" jsonschema:"New position index for move_item (0-based)"`
+	MediaType         string   `json:"media_type,omitempty" jsonschema:"Media type for create: Audio or Video"`
+	DryRun            *bool    `json:"dry_run,omitempty" jsonschema:"For deduplicate: report-only mode (default true)"`
+	Confirm           *bool    `json:"confirm,omitempty" jsonschema:"Set to true to confirm destructive operations (required for remove_items, deduplicate with dry_run=false)"`
+	Query             string   `json:"query,omitempty" jsonschema:"Natural-language playlist intent such as relaxed Sunday or high-energy workout"`
+	DurationMinutes   int      `json:"duration_minutes,omitempty" jsonschema:"Target playlist duration in minutes (default 90)"`
+	MaxRuntimeMinutes int      `json:"max_runtime_minutes,omitempty" jsonschema:"Maximum runtime per video item"`
+	Limit             int      `json:"limit,omitempty" jsonschema:"Maximum generated items (default 25)"`
 }
 
 type CollectionsInput struct {

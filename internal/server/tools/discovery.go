@@ -204,10 +204,10 @@ func RegisterDiscoveryTools(server *mcp.Server, client jf.Client, enabled func(s
 			Name:  "jellyfin_recommendations",
 			Title: "Recommendations",
 			InputSchema: jf.WithEnums[jf.RecommendationsInput](map[string][]any{
-				"type": {"next_up", "suggestions", "latest", "similar", "movie_recs", "upcoming", "recently_played"},
+				"type": {"personalized", "next_up", "suggestions", "latest", "similar", "movie_recs", "upcoming", "recently_played"},
 			}),
 			Description: "Get personalized content recommendations from Jellyfin. Returns compact results — use jellyfin_get_item for full metadata. " +
-				"Common use cases: 'What should I watch?' -> try 'suggestions' for mixed content or 'movie_recs' for movies. " +
+				"Common use cases: 'What should I watch?' -> use 'personalized' for local explainable ranking or 'suggestions' for Jellyfin's built-in suggestions. " +
 				"'What is next in my shows?' -> use 'next_up'. 'What is new on the server?' -> use 'latest'. " +
 				"'More like this movie' -> use 'similar' with item_id. 'What did I watch recently?' -> use 'recently_played'.",
 			Annotations: AnnotReadOnly,
@@ -219,6 +219,9 @@ func RegisterDiscoveryTools(server *mcp.Server, client jf.Client, enabled func(s
 			}
 
 			switch args.Type {
+			case "personalized":
+				return registerPersonalizedRecommendation(args, ctx, client, userID)
+
 			case "next_up":
 				maxItems := jf.ClampInt(args.Limit, 100, jf.MaxLimitCap)
 				params := url.Values{
@@ -358,7 +361,7 @@ func RegisterDiscoveryTools(server *mcp.Server, client jf.Client, enabled func(s
 				return jf.TextResult(fmt.Sprintf("Recently played (%d of %d):\n\n%s", len(items), total, jf.FormatJSON(items))), &jf.RecommendationsOutput{Items: jf.ToMediaItems(items)}, nil
 
 			default:
-				return jf.ErrResult("Invalid type '%s'. Valid types: next_up, suggestions, latest, similar, movie_recs, upcoming, recently_played", args.Type), nil, nil
+				return jf.ErrResult("Invalid type '%s'. Valid types: personalized, next_up, suggestions, latest, similar, movie_recs, upcoming, recently_played", args.Type), nil, nil
 			}
 		})
 	}

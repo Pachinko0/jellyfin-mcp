@@ -101,7 +101,8 @@ type TVShowsOutput struct {
 // --- Recommendations ---
 
 type RecommendationsOutput struct {
-	Items []MediaItem `json:"items"`
+	Items  []MediaItem      `json:"items"`
+	Ranked []map[string]any `json:"ranked,omitempty"`
 }
 
 // --- Detailed Item ---

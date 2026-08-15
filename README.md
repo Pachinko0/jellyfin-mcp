@@ -299,9 +299,9 @@ Image tags: `latest` (latest build from `main`), the full version from release t
 
 | Toolset | Tools | Covers |
 |---------|-------|--------|
-| `discovery` | 6 | Search, browse, recommendations, item details |
+| `discovery` | 6 | Search, browse, explainable recommendations, item details |
 | `media` | 3 | TV shows, music, people |
-| `user` | 3 | Favorites, playlists, collections |
+| `user` | 3 | Favorites, generated playlists, playlists, collections |
 | `playback` | 4 | Sessions, playback control, SyncPlay |
 | `admin` | 8 | System, users, libraries, tasks, plugins, devices, server config |
 | `content` | 4 | Metadata, subtitles, images, video versions |

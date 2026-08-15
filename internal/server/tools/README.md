@@ -10,7 +10,7 @@
 | `jellyfin_search` | Search for media by keyword |
 | `jellyfin_browse` | Browse and filter by genre, year, studio, person, rating, sort order |
 | `jellyfin_get_item` | Full metadata for a specific item (genres, cast, codecs, ratings, provider IDs) |
-| `jellyfin_recommendations` | Personalized suggestions, next up, latest additions, similar items |
+| `jellyfin_recommendations` | Explainable local recommendations, suggestions, next up, latest additions, and similar items |
 | `jellyfin_item_extras` | Special features, trailers, theme songs, intro/outro markers, download URLs |
 
 ## media
@@ -26,7 +26,7 @@
 | Tool | Description |
 |------|-------------|
 | `jellyfin_user_data` | Favorites, ratings, played/unplayed status |
-| `jellyfin_playlists` | Create, modify, reorder, and deduplicate playlists |
+| `jellyfin_playlists` | Create, generate, preview, modify, reorder, and deduplicate playlists |
 | `jellyfin_collections` | Create and manage box set collections |
 
 ## playback
